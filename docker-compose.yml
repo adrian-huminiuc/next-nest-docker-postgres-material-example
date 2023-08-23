@@ -1,0 +1,35 @@
+version: "3.4"
+services:
+  api:
+    container_name: omni-api
+    build:
+      context: ./omni-api
+      dockerfile: ./ops/docker/Dockerfile
+      args:
+        ENV: development
+    volumes:
+      - ./omni-api:/home/node/service
+    env_file: .env
+    command: npm run start:dev
+    ports:
+      - ${API_PORT}:${API_PORT}
+    depends_on:
+      - db
+
+  db:
+    container_name: omni-db
+    image: postgres:14.3-alpine
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_NAME}
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - ${DB_PORT_EXPOSED}:${DB_PORT}
+    volumes:
+      - data:/var/lib/postgresql/data
+      - ./omni-api/ops/postgres:/docker-entrypoint-initdb.d/
+
+volumes:
+  data:
+    driver: local
